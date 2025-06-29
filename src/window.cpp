@@ -10,9 +10,10 @@
 
 #include <SDL2/SDL.h>
 
-Life::Life(int width, int height, std::string title){
+Life::Life(int width, int height, float scale, std::string title){
 	this->width = width;
 	this->height = height;
+	this->scale = scale;
 
 	if(windowCount == 0){
 		if(SDL_Init(SDL_INIT_VIDEO) < 0){
@@ -21,7 +22,7 @@ Life::Life(int width, int height, std::string title){
 	}
 
 	//Create a window
-	window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
+	window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width*scale, height*scale, SDL_WINDOW_SHOWN);
 	if(window == NULL){
 		throw error::SDL_create_window();
 	}

@@ -2,22 +2,21 @@
 
 #include <vector>
 
-#include <iostream>
-
 void Life::populate(Particle::Type type, int count){
 	for(int i = 0; i < count; ++i){
 		int x = rand() % width;
 		int y = rand() % height;
 
-		particles.emplace_back(type, SDL_FPoint{(float) x, (float) y}, 7);
+		particles.emplace_back(type, SDL_FPoint{(float) x, (float) y}, 5, scale);
 	}
 }
 
+#define FORCE_MULTIPLIER 0.0007
 void Life::initForceMatrix(){
 	for(int i = 0; i < PARTICLE_TYPE_COUNT; ++i){
 		for(int j = 0; j < PARTICLE_TYPE_COUNT; ++j){
 			float multiplier = (float) rand() / (float) RAND_MAX;
-			forceMatrix[i][j] = (2.0*multiplier - multiplier) * 0.0002;
+			forceMatrix[i][j] = (2.0*multiplier - 1.0) * FORCE_MULTIPLIER;
 		}
 	}
 }
@@ -49,7 +48,7 @@ void Life::render(){
 
 	//draw black background
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-	SDL_Rect bgRect{.x=0, .y=0, .w=width, .h=height};
+	SDL_Rect bgRect{.x=0, .y=0, .w=(int) (width*scale)+5, .h=(int) (height*scale)+5};
 	SDL_RenderFillRect(renderer, &bgRect);
 
 	for(int i = 0; i < particles.size(); ++i){
@@ -104,14 +103,14 @@ void Life::move(){
 			}
 			*/
 
-			#define ATTRACT_LOW_THRESHOLD 25.0
-			#define ATTRACT_PEAK 112.5
-			#define ATTRACT_UP_THRESHOLD 200.0
+			#define ATTRACT_LOW_THRESHOLD (12.0*2)
+			#define ATTRACT_UP_THRESHOLD (200.0*2)
+			#define ATTRACT_PEAK (ATTRACT_LOW_THRESHOLD+ATTRACT_UP_THRESHOLD)/2.0
 			{
 				float force = 0;
 				float multiplier = forceMatrix[p.type][p1.type];
 				if(dist < ATTRACT_LOW_THRESHOLD){
-					force = 0.0077 * (-1.0 + dist/ATTRACT_LOW_THRESHOLD);
+					force = 0.05 * (-1.0 + dist/ATTRACT_LOW_THRESHOLD);
 				}
 				else if(dist < ATTRACT_PEAK){
 					force = multiplier * (-1.0 + dist/ATTRACT_LOW_THRESHOLD);
@@ -120,7 +119,8 @@ void Life::move(){
 					force = multiplier * ((ATTRACT_UP_THRESHOLD-dist)/(ATTRACT_UP_THRESHOLD-ATTRACT_PEAK));
 				}
 
-				#define FRICTION (0.000001)
+				#define FRICTION (0.000004)
+				#define SUPER_FRICTION (0.00007)
 				float speed = sqrt(p.velX*p.velX + p.velY*p.velY);
 				if(speed <= FRICTION){
 					p.velX = 0;
@@ -133,8 +133,14 @@ void Life::move(){
 					else if(p.velX > 0) motionAngle = atan(p.velY/p.velX);
 					else if(p.velX < 0) motionAngle = atan(p.velY/p.velX) + PI;
 
-					p.velX -= FRICTION * cos(motionAngle);
-					p.velY -= FRICTION * sin(motionAngle);
+					if(speed < 3.0){
+						p.velX -= FRICTION * cos(motionAngle);
+						p.velY -= FRICTION * sin(motionAngle);
+					}
+					else{
+						p.velX -= SUPER_FRICTION * cos(motionAngle);
+						p.velY -= SUPER_FRICTION * sin(motionAngle);
+					}
 
 				}
 
@@ -143,20 +149,24 @@ void Life::move(){
 			}
 		}
 
+		//accelerate
 		p.pos.x += p.velX;
 		p.pos.y += p.velY;
 
+		//move each vertex of the circle
 		for(int j = 0; j < p.points.size(); ++j){
-			p.points[j].position.x += p.velX;
-			p.points[j].position.y += p.velY;
+			p.points[j].position.x += p.velX*scale;
+			p.points[j].position.y += p.velY*scale;
 
-			if(p.pos.x < 0) p.points[j].position.x += width;
-			else if(p.pos.x > width) p.points[j].position.x -= width;
-			if(p.pos.y < 0) p.points[j].position.y += height;
-			else if(p.pos.y > height) p.points[j].position.y -= height;
+			//wrap around sides
+			if(p.pos.x < 0) p.points[j].position.x += width*scale;
+			else if(p.pos.x > width) p.points[j].position.x -= width*scale;
+			if(p.pos.y < 0) p.points[j].position.y += height*scale;
+			else if(p.pos.y > height) p.points[j].position.y -= height*scale;
 		}
 
 
+		//wrap around sides
 		if(p.pos.x < 0) p.pos.x += width;
 		else if(p.pos.x > width) p.pos.x -= width;
 		if(p.pos.y < 0) p.pos.y += height;

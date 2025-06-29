@@ -6,7 +6,7 @@
 
 #define PI (3.14159265358979)
 
-Particle::Particle(Particle::Type type, SDL_FPoint pos, float radius){
+Particle::Particle(Particle::Type type, SDL_FPoint pos, float radius, float scale){
 	this->pos = pos;
 	this->radius = radius;
 	this->type = type;
@@ -19,15 +19,15 @@ Particle::Particle(Particle::Type type, SDL_FPoint pos, float radius){
 	velY = 0;
 
 
-	recomputeVerticies();
+	recomputeVerticies(scale);
 }
 
-#define ITER 40
+#define ITER 15
 
 int Particle::indices[ITER*3];
 bool Particle::indicesSet = false;
 
-void Particle::recomputeVerticies(){
+void Particle::recomputeVerticies(float scale){
 
 	if(!indicesSet){
 		indicesSet = true;
@@ -43,12 +43,13 @@ void Particle::recomputeVerticies(){
 
 	points = std::vector<SDL_Vertex>();
 
-	points.push_back(SDL_Vertex{pos, color});
+	SDL_FPoint newPos{pos.x*scale, pos.y*scale};
+	points.push_back(SDL_Vertex{newPos, color});
 
 	//compute verticies to draw the circle
 	for(int i = 0; i < ITER; ++i){
-		float x = pos.x + radius * cos(2*PI/ITER * i);
-		float y = pos.y + radius * sin(2*PI/ITER * i);
+		float x = newPos.x + radius * scale * cos(2*PI/ITER * i);
+		float y = newPos.y + radius * scale * sin(2*PI/ITER * i);
 
 		points.push_back(SDL_Vertex{SDL_FPoint{x, y}, color});
 	}
