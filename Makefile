@@ -1,3 +1,3 @@
 build:
 	@cd src; \
-		g++ -o ../life *.cpp  -lSDL2
+		g++ -O3 -o ../life *.cpp -lSDL2

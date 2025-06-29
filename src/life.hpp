@@ -5,55 +5,39 @@
 #include <string>
 #include <vector>
 
-#define PARTICLE_TYPE_COUNT 7
+#define PARTICLE_TYPE_COUNT 15
 
 class Particle{
 	friend class Life;
 
 	public:
-		enum Type{
-			PARTICLE_BLUE = 0,
-			PARTICLE_RED = 1,
-			PARTICLE_GREEN = 2,
-			PARTICLE_YELLOW = 3,
-			PARTICLE_VIOLET = 4,
-			PARTICLE_CYAN = 5,
-			PARTICLE_ORANGE = 6,
-		};
-		SDL_Color to_color(Particle::Type type){
-			switch(type){
-				case PARTICLE_BLUE: return SDL_Color{50, 50, 200, 255};
-				case PARTICLE_RED: return SDL_Color{200, 50, 50, 255};
-				case PARTICLE_GREEN: return SDL_Color{50, 200, 50, 255};
-				case PARTICLE_YELLOW: return SDL_Color{220, 220, 50, 255};
-				case PARTICLE_VIOLET: return SDL_Color{109, 18, 214, 255};
-				case PARTICLE_CYAN: return SDL_Color{33, 163, 170, 255};
-				case PARTICLE_ORANGE: return SDL_Color{208, 102, 27, 255};
-
-				default: return SDL_Color{0, 0, 0, 0};
-			}
-		}
-
-		Particle(Particle::Type type, SDL_FPoint pos, float radius, float scale);
+		Particle(int type, SDL_FPoint pos, float radius, float scale);
 
 		void render(SDL_Renderer* renderer);
 
+		static void resetTypeColors();
+		static SDL_Color getTypeColor(int type);
+
 	private:
-		std::vector<SDL_Vertex> points;
+		static std::vector<SDL_Color> typeColors;
 
 		static int indices[];
 		static bool indicesSet;
+
+		std::vector<SDL_Vertex> points;
 
 		void recomputeVerticies(float scale);
 
 		SDL_FPoint pos;
 		float radius;
 
-		Particle::Type type;
-		SDL_Color color;
+		int type;
 
 		float velX;
 		float velY;
+
+		float prevVelX;
+		float prevVelY;
 
 };
 
@@ -71,6 +55,9 @@ class Life{
 		SDL_Window* window;
 		SDL_Renderer* renderer;
 
+		uint32_t frameCount;
+		uint32_t startTime; //in seconds
+
 		std::vector<Particle> particles;
 
 		//first index is self-type, second index is other-type
@@ -83,7 +70,7 @@ class Life{
 		~Life();
 
 		void run();
-		void populate(Particle::Type type, int count);
+		void populate(int count);
 };
 
 

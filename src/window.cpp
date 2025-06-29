@@ -1,7 +1,8 @@
 #include "life.hpp"
 
 #include <string>
-#include <ctime>
+#include <chrono>
+#include <system_error>
 
 #ifdef NULL
 #undef NULL
@@ -14,6 +15,11 @@ Life::Life(int width, int height, float scale, std::string title){
 	this->width = width;
 	this->height = height;
 	this->scale = scale;
+
+	frameCount = 0;
+
+	const auto p1 = std::chrono::system_clock::now();
+	startTime = std::chrono::duration_cast<std::chrono::seconds>(p1.time_since_epoch()).count();
 
 	if(windowCount == 0){
 		if(SDL_Init(SDL_INIT_VIDEO) < 0){
