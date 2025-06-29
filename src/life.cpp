@@ -5,8 +5,8 @@
 
 void Life::populate(int count){
 	for(int i = 0; i < count; ++i){
-		int x = rand() % width;
-		int y = rand() % height;
+		float x = (float) rand() / RAND_MAX * width;
+		float y = (float) rand() / RAND_MAX * height;
 
 		int type = (int) ((float) rand() / RAND_MAX * PARTICLE_TYPE_COUNT);
 
@@ -40,15 +40,29 @@ void Life::run(){
 			const auto p1 = std::chrono::system_clock::now();
 			uint32_t seconds = std::chrono::duration_cast<std::chrono::seconds>(p1.time_since_epoch()).count();
 
-			if(seconds - startTime >= 600){
+			#define RESET_INTERVAL_SECONDS 600
+
+			if(seconds - startTime >= RESET_INTERVAL_SECONDS){
 				startTime = seconds;
 
 				Particle::resetTypeColors();
 
-				//this is needed for the new colors to be displayed
 				for(int i = 0; i < particles.size(); ++i){
-					particles[i].type = (int) ((float) rand() / RAND_MAX * PARTICLE_TYPE_COUNT);
-					particles[i].recomputeVerticies(scale);
+					Particle &p = particles[i];
+
+					float x = (float) rand() / RAND_MAX * width;
+					float y = (float) rand() / RAND_MAX * height;
+					p.pos = SDL_FPoint{x, y};
+
+					p.velX = 0;
+					p.velY = 0;
+
+					p.prevVelX = 0;
+					p.prevVelY = 0;
+
+					p.type = (int) ((float) rand() / RAND_MAX * PARTICLE_TYPE_COUNT);
+
+					p.recomputeVerticies(scale);
 				}
 
 				initForceMatrix(); //reset force fields
